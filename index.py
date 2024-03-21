@@ -8,6 +8,8 @@ from tkcalendar import Calendar
 import time
 import pandas as pd
 import pyarrow
+import firebase_admin
+from firebase_admin import credentials, db
 
 splash = tk.Tk()
 splash.geometry("644x420+450+200")
@@ -273,6 +275,49 @@ def main_func():
         for row in print_date:
             treeview.insert("", tk.END, values=row)
 
+    def on_firebase_button_click():
+        # Connect to the SQLite database
+        conn = sqlite3.connect('attendance.db')
+        cursor = conn.cursor()
+
+        # Create a Tkinter window
+        window = tk.Toplevel(root)
+        window.title("Select Date")
+
+        # Create a Calendar widget
+        cal = Calendar(window, selectmode="day", date_pattern="yyyy-mm-dd")
+        cal.pack(padx=20, pady=20)
+        def export_to_firebase():
+            cred = credentials.Certificate("wifi-based-attendance-systempc-firebase-adminsdk-zxfc9-ef14c8a7a2.json")
+            firebase_admin.initialize_app(cred, {"databaseURL": "https://wifi-based-attendance-systempc-default-rtdb.firebaseio.com/"})
+            ref = db.reference('/Attendance Data/')
+
+            conn = sqlite3.connect("attendance.db")
+            cursor = conn.cursor()
+            selected_date = cal.get_date()
+
+            # query = "SELECT user_id, entry_time, exit_time FROM Attend WHERE today_date = ?"
+            cursor.execute("SELECT * FROM Attend WHERE today_date = ?", (selected_date,))
+            data1 = cursor.fetchall()
+
+            # Push records to Firebase
+            for row in data1:
+                srno, user_id, entry_time, exit_time, today_date = row
+
+                # Pushing data to Firebase
+                ref.push({
+                    'srno': srno,
+                    'user_id': user_id,
+                    'entry_time': entry_time,
+                    'exit_time': exit_time,
+                    'today_date': today_date
+                })
+
+            print("Data exported to Firebase.")
+
+        export_button = tk.Button(window, text="Export Attendance to Firebase", command=export_to_firebase)
+        export_button.pack(pady=10)
+
     label = tk.Label(tab2, text="Select a employee by ID")
     label.pack()
 
@@ -307,9 +352,11 @@ def main_func():
     treeview.column('Exit_time', width=150)
     treeview.column('today_date', width=100)
     button = ttk.Button(tab2, text="Get Data", command=print_date)
-    button3 = ttk.Button(tab2, text="Extract", command=on_button_click)
+    button3 = ttk.Button(tab2, text="Export to Excel", command=on_button_click)
     button.pack(pady=20)
-    button3.place(relx=1, rely=1, anchor=tk.SE, x=-10, y=-10)
+    button3.place(relx=1, rely=1, anchor=tk.SE, x=-10, y=-40)
+    export_button = ttk.Button(tab2, text="Export to Firebase", command=on_firebase_button_click)
+    export_button.place(relx=1, rely=1, anchor=tk.SE, x=-10, y=-10)
     treeview.pack()
     result_label = tk.Label(tab2, text="",width=30,height=2)
     result_label.pack()
