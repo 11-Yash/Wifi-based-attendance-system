@@ -52,6 +52,14 @@ def main_func():
     tab_control.add(tab3, text='Start System')
     tab_control.add(tab1, text='Attendee Data')
     tab_control.add(tab2, text='Attendance Database')
+    # Not working
+    # bg_image = tk.PhotoImage(file="bg.png")
+    # background_label1 = tk.Label(tab3, image=bg_image)
+    # background_label2 = tk.Label(tab1, image=bg_image)
+    # background_label3 = tk.Label(tab2, image=bg_image)
+    # background_label1.place(relwidth=1, relheight=1)
+    # background_label2.place(relwidth=1, relheight=1)
+    # background_label3.place(relwidth=1, relheight=1)
 
     root.protocol("WM_DELETE_WINDOW", on_close)  # bind the WM_DELETE_WINDOW event to the on_close function
     button1 = tk.Button(tab3, text='Start the attendance system', command=start_stop, width=30, height= 2)
