@@ -6,7 +6,8 @@ from tkinter import *
 from datetime import datetime
 from tkcalendar import Calendar
 import time
-
+import pandas as pd
+import pyarrow
 
 splash = tk.Tk()
 splash.geometry("644x420+450+200")
@@ -152,6 +153,42 @@ def main_func():
 
         # Close the database connection
         conn.close()
+    
+    def on_button_click():
+        # Connect to the SQLite database
+        conn = sqlite3.connect('attendance.db')
+        cursor = conn.cursor()
+
+        # Create a Tkinter window
+        window = tk.Toplevel(root)
+        window.title("Select Date")
+
+        # Create a Calendar widget
+        cal = Calendar(window, selectmode="day", date_pattern="yyyy-mm-dd")
+        cal.pack(padx=20, pady=20)
+
+        # Function to extract attendance table to Excel
+        def extract_to_excel():
+            selected_date = cal.get_date()
+            print("Selected Date:", selected_date)
+
+            # Query the database to fetch attendance data for the selected date
+            query = "SELECT user_id, entry_time, exit_time FROM Attend WHERE today_date = ?"
+            cursor.execute(query, (selected_date,))
+            data = cursor.fetchall()
+            
+            # Create a DataFrame from the fetched data
+            df = pd.DataFrame(data, columns=['user_id', 'entry_time', 'exit_time'])
+            
+            # Export DataFrame to Excel
+            filename = f"attendance_{selected_date}.xlsx"
+            df.to_excel(filename, index=False)
+            print("Attendance data exported to:", filename)
+
+        # Create a button to extract attendance to Excel
+        export_button = tk.Button(window, text="Export Attendance to Excel", command=extract_to_excel)
+        export_button.pack(pady=10)
+
 
     # Create username label and entry box
     username_label = tk.Label(tab1, text="Username:")
@@ -270,11 +307,13 @@ def main_func():
     treeview.column('Exit_time', width=150)
     treeview.column('today_date', width=100)
     button = ttk.Button(tab2, text="Get Data", command=print_date)
+    button3 = ttk.Button(tab2, text="Extract", command=on_button_click)
     button.pack(pady=20)
+    button3.place(relx=1, rely=1, anchor=tk.SE, x=-10, y=-10)
     treeview.pack()
     result_label = tk.Label(tab2, text="",width=30,height=2)
     result_label.pack()
 
-splash.after(3000, main_func)
+splash.after(2000, main_func)
 # start the main event loop
 mainloop()
