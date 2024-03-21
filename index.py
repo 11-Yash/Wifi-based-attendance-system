@@ -5,6 +5,7 @@ import subprocess
 from tkinter import *
 from datetime import datetime
 from tkcalendar import Calendar
+import time
 
 
 splash = tk.Tk()
@@ -36,7 +37,7 @@ def main_func():
 
     def on_close():
         global process  # use the global variable
-
+        update_exit_time()
         if process is not None:  # if the process is running, stop it
             process.terminate()  # terminate the process
         root.destroy()  # destroy the main window
@@ -140,6 +141,18 @@ def main_func():
         # Reload the database and update the Treeview widget
         reload_gui()
 
+    def update_exit_time():
+        current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+
+        conn = sqlite3.connect('attendance.db')
+        cursor = conn.cursor()
+
+        cursor.execute("UPDATE Attend SET exit_time = ? WHERE exit_time IS NULL", (current_time,))
+        conn.commit()
+
+        # Close the database connection
+        conn.close()
+
     # Create username label and entry box
     username_label = tk.Label(tab1, text="Username:")
     username_label.pack()
@@ -230,7 +243,7 @@ def main_func():
     combo = ttk.Combobox(tab2, state="readonly")
     combo.pack()
 
-    cal = Calendar(tab2, selectmode='day', year=2023, month=3, day=21)
+    cal = Calendar(tab2, selectmode='day', year=2024, month=3, day=21)
     cal.pack(pady=20)
 
     combo['values'] = [""] 
